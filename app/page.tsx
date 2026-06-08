@@ -17,7 +17,7 @@ const HINTS = [
   "Toca para abrir ♥",
   "← voltar  ·  continuar →",
   "← voltar  ·  continuar →",
-  "← voltar  ·  surpresa ♥",
+  "← voltar  ·  ver vídeo ♥",
 ];
 
 const HEARTS = Array.from({ length: 14 }, (_, i) => ({
@@ -39,7 +39,7 @@ export default function Home() {
   const advancingRef = useRef(false);
 
   useEffect(() => {
-    const srcs = [...BG_IMAGES, "/cat.jpg"];
+    const srcs = [...BG_IMAGES];
     let loaded = 0;
     srcs.forEach((src) => {
       const img = new Image();
@@ -167,88 +167,30 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* ── Step 4: full-screen cat ── */}
+      {/* ── Step 4: full-screen video ── */}
       <AnimatePresence>
         {step === 4 && (
           <motion.div
-            key="cat"
+            key="video"
             style={{ position: "absolute", inset: 0 }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.85, ease: "easeInOut" }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/cat.jpg"
-              alt="O nosso gatinho"
-              draggable={false}
+            <video
+              src="/video.mp4"
+              autoPlay
+              loop
+              muted={muted}
+              playsInline
               style={{
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
-                objectPosition: "center top",
+                objectPosition: "center",
                 display: "block",
               }}
             />
-            {/* Gradient overlay */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 40%, transparent 60%)",
-              }}
-            />
-            {/* Text pinned to safe-area bottom */}
-            <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.65, duration: 0.6 }}
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
-                paddingLeft: 32,
-                paddingRight: 32,
-                textAlign: "center",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "var(--font-playfair)",
-                  color: "#fff",
-                  fontSize: 20,
-                  fontWeight: 600,
-                  letterSpacing: "0.12em",
-                  marginBottom: 10,
-                  textShadow: "0 2px 10px rgba(0,0,0,0.6)",
-                }}
-              >
-                O Teu Dia ♥
-              </p>
-              <p
-                style={{
-                  fontFamily: "var(--font-playfair)",
-                  color: "rgba(255,255,255,0.9)",
-                  fontSize: 15,
-                  fontStyle: "italic",
-                  lineHeight: 1.65,
-                  textShadow: "0 2px 8px rgba(0,0,0,0.55)",
-                }}
-              >
-                E o nosso bebé também te deseja<br />um dia muito especial. 🐾
-              </p>
-              <motion.p
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.1, type: "spring", stiffness: 120 }}
-                style={{ color: "#fff", fontSize: 24, marginTop: 14 }}
-              >
-                🐾 ♥ 🐾
-              </motion.p>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
