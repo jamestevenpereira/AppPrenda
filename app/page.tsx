@@ -2,9 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import dynamic from "next/dynamic";
-
-const FloatingBalloons = dynamic(() => import("react-floating-balloons"), { ssr: false });
 
 type Step = 0 | 1 | 2 | 3 | 4;
 const TOTAL_STEPS = 5;
@@ -15,6 +12,16 @@ const BG_IMAGES = [
   "/step3-gifts.png",
   "/step4-cat-envelope.png",
 ];
+
+const BALLOON_COLORS = ["#e91e8c","#ffd700","#ce93d8","#f48fb1","#ff6b9d","#c2185b","#ffe082","#e040fb"];
+const BALLOONS = Array.from({ length: 10 }, (_, i) => ({
+  id: i,
+  left: 3 + (i * 9.5) % 88,
+  color: BALLOON_COLORS[i % BALLOON_COLORS.length],
+  delay: i * 0.5,
+  duration: 12 + (i % 5) * 2,   // 12-20s — nice slow float
+  scale: 0.8 + (i % 3) * 0.15,
+}));
 
 const HINTS = [
   "Toca para abrir ♥",
@@ -219,17 +226,29 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ── Balloons ── */}
-      {step === 4 && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 16, pointerEvents: "none" }}>
-          <FloatingBalloons
-            count={10}
-            msgText="26"
-            colors={["#e91e8c", "#ffd700", "#ce93d8", "#f48fb1", "#ff6b9d", "#c2185b", "#ffe082", "#e040fb"]}
-            popVolumeLevel={0}
-            loop={true}
-          />
-        </div>
-      )}
+      {step === 4 && BALLOONS.map((b) => (
+        <motion.div
+          key={b.id}
+          style={{ position: "absolute", left: `${b.left}%`, bottom: -110, zIndex: 16, pointerEvents: "none" }}
+          initial={{ y: 0, opacity: 0, scale: b.scale }}
+          animate={{
+            y: -1700,
+            opacity: [0, 1, 1, 1, 0],
+            rotate: [-5, 5, -6, 4, -4, 5, -5],
+          }}
+          transition={{
+            delay: b.delay,
+            duration: b.duration,
+            repeat: Infinity,
+            repeatDelay: 2,
+            y: { ease: "linear" },
+            opacity: { times: [0, 0.06, 0.4, 0.8, 1], ease: "linear" },
+            rotate: { duration: b.duration * 0.5, repeat: Infinity, ease: "easeInOut" },
+          }}
+        >
+          <BalloonSVG color={b.color} />
+        </motion.div>
+      ))}
 
       {/* ── Floating hearts ── */}
       {preloaded && HEARTS.map((h) => (
@@ -338,3 +357,39 @@ export default function Home() {
   );
 }
 
+function BalloonSVG({ color }: { color: string }) {
+  const dark = shadeColor(color, -30);
+  const gid = `g${color.replace("#", "")}`;
+  return (
+    <svg width="60" height="98" viewBox="0 0 60 98" fill="none">
+      <defs>
+        <radialGradient id={gid} cx="35%" cy="32%" r="65%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.38)" />
+          <stop offset="100%" stopColor={dark} stopOpacity="0.45" />
+        </radialGradient>
+      </defs>
+      {/* Body */}
+      <ellipse cx="30" cy="31" rx="26" ry="29" fill={color} />
+      <ellipse cx="30" cy="31" rx="26" ry="29" fill={`url(#${gid})`} />
+      {/* Highlight */}
+      <ellipse cx="20" cy="20" rx="7" ry="9" fill="rgba(255,255,255,0.3)" transform="rotate(-20 20 20)" />
+      {/* Knot */}
+      <polygon points="30,60 26,67 34,67" fill={dark} />
+      {/* String */}
+      <path d="M30 67 Q36 76 26 84 Q20 90 30 98" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      {/* Text */}
+      <text x="30" y="37" textAnchor="middle" fill="white" fontSize="16" fontWeight="800" fontFamily="Georgia, serif"
+        style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }}>
+        26
+      </text>
+    </svg>
+  );
+}
+
+function shadeColor(hex: string, amount: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.min(255, Math.max(0, (n >> 16) + amount));
+  const g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amount));
+  const b = Math.min(255, Math.max(0, (n & 0xff) + amount));
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
