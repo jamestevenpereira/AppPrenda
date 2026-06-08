@@ -15,9 +15,9 @@ const BG_IMAGES = [
 
 const HINTS = [
   "Toca para abrir ♥",
-  "Toca para continuar →",
-  "Toca para continuar →",
-  "Toca para ver a surpresa ♥",
+  "← voltar  ·  continuar →",
+  "← voltar  ·  continuar →",
+  "← voltar  ·  surpresa ♥",
 ];
 
 const HEARTS = Array.from({ length: 14 }, (_, i) => ({
@@ -34,6 +34,7 @@ export default function Home() {
   const [preloaded, setPreloaded] = useState(false);
   const [muted, setMuted] = useState(false);
   const [envelopeZoomed, setEnvelopeZoomed] = useState(false);
+  const [tapFlash, setTapFlash] = useState<"left" | "right" | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const advancingRef = useRef(false);
 
@@ -62,27 +63,45 @@ export default function Home() {
     setMuted((m) => !m);
   }, []);
 
-  const advance = useCallback(() => {
-    if (advancingRef.current || step >= 4) return;
-    advancingRef.current = true;
+  const flash = (side: "left" | "right") => {
+    setTapFlash(side);
+    setTimeout(() => setTapFlash(null), 220);
+  };
 
-    if (step === 0) {
-      setEnvelopeZoomed(true);
-      if (audioRef.current) audioRef.current.play().catch(() => {});
-      setTimeout(() => {
-        setStep(1);
-        setEnvelopeZoomed(false);
-        advancingRef.current = false;
-      }, 520);
+  const handleTap = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (advancingRef.current) return;
+
+    const isLeft = e.clientX < e.currentTarget.offsetWidth / 2;
+
+    if (isLeft) {
+      // Go back
+      if (step === 0) return;
+      flash("left");
+      setStep((s) => (s - 1) as Step);
     } else {
-      setStep((s) => (s + 1) as Step);
-      advancingRef.current = false;
+      // Go forward
+      if (step >= 4) return;
+      flash("right");
+      advancingRef.current = true;
+
+      if (step === 0) {
+        setEnvelopeZoomed(true);
+        if (audioRef.current) audioRef.current.play().catch(() => {});
+        setTimeout(() => {
+          setStep(1);
+          setEnvelopeZoomed(false);
+          advancingRef.current = false;
+        }, 520);
+      } else {
+        setStep((s) => (s + 1) as Step);
+        advancingRef.current = false;
+      }
     }
   }, [step]);
 
   return (
     <main
-      onClick={advance}
+      onClick={handleTap}
       style={{
         position: "fixed",
         inset: 0,
@@ -95,6 +114,28 @@ export default function Home() {
         WebkitUserSelect: "none",
       }}
     >
+      {/* ── Tap flash feedback (Instagram-style) ── */}
+      <AnimatePresence>
+        {tapFlash && (
+          <motion.div
+            key={tapFlash}
+            initial={{ opacity: 0.25 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              [tapFlash === "left" ? "left" : "right"]: 0,
+              width: "50%",
+              background: "rgba(255,255,255,0.18)",
+              zIndex: 30,
+              pointerEvents: "none",
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* ── Background images steps 0-3 ── */}
       <AnimatePresence>
         {step <= 3 && (
