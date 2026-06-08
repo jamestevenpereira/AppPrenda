@@ -16,6 +16,7 @@
     "next": "^14.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-floating-balloons": "^3.0.2",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.0.0"
   }

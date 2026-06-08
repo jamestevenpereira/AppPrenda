@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const FloatingBalloons = dynamic(() => import("react-floating-balloons"), { ssr: false });
 
 type Step = 0 | 1 | 2 | 3 | 4;
 const TOTAL_STEPS = 5;
@@ -20,19 +23,6 @@ const HINTS = [
   "← voltar  ·  ver vídeo ♥",
 ];
 
-const BALLOON_COLORS = [
-  "#e91e8c", "#ffd700", "#ce93d8", "#f48fb1",
-  "#ff6b9d", "#c2185b", "#ffe082", "#e040fb",
-];
-
-const BALLOONS = Array.from({ length: 11 }, (_, i) => ({
-  id: i,
-  left: 4 + (i * 8.8) % 90,       // % from left edge
-  color: BALLOON_COLORS[i % BALLOON_COLORS.length],
-  delay: i * 0.18,
-  duration: 5.5 + (i % 4) * 0.9,
-  scaleVal: 0.85 + (i % 3) * 0.12,
-}));
 
 const HEARTS = Array.from({ length: 14 }, (_, i) => ({
   id: i,
@@ -228,45 +218,18 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* ── Balloons — rendered outside video div so they ignore its opacity fade ── */}
-      <AnimatePresence>
-        {step === 4 && (
-          <>
-            {BALLOONS.map((b) => (
-              <motion.div
-                key={b.id}
-                style={{
-                  position: "absolute",
-                  left: `${b.left}%`,
-                  bottom: -100,
-                  zIndex: 16,
-                  pointerEvents: "none",
-                  originY: 1,
-                }}
-                initial={{ y: 0, opacity: 0, scale: b.scaleVal }}
-                animate={{
-                  y: -1600,
-                  opacity: [0, 1, 1, 1, 0],
-                  rotate: [-4, 4, -5, 3, -3, 4, -4],
-                }}
-                transition={{
-                  delay: b.delay,
-                  duration: b.duration,
-                  y: { ease: "easeOut" },
-                  opacity: { times: [0, 0.07, 0.45, 0.78, 1], ease: "linear" },
-                  rotate: {
-                    duration: b.duration * 0.55,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  },
-                }}
-              >
-                <BalloonSVG color={b.color} />
-              </motion.div>
-            ))}
-          </>
-        )}
-      </AnimatePresence>
+      {/* ── Balloons ── */}
+      {step === 4 && (
+        <div style={{ position: "absolute", inset: 0, zIndex: 16, pointerEvents: "none" }}>
+          <FloatingBalloons
+            count={10}
+            msgText="26"
+            colors={["#e91e8c", "#ffd700", "#ce93d8", "#f48fb1", "#ff6b9d", "#c2185b", "#ffe082", "#e040fb"]}
+            popVolumeLevel={0}
+            loop={true}
+          />
+        </div>
+      )}
 
       {/* ── Floating hearts ── */}
       {preloaded && HEARTS.map((h) => (
@@ -375,32 +338,3 @@ export default function Home() {
   );
 }
 
-/* ── Balloon SVG ── */
-function BalloonSVG({ color }: { color: string }) {
-  const dark = shadeColor(color, -30);
-  const gradId = `g${color.replace("#", "")}`;
-  return (
-    <svg width="56" height="92" viewBox="0 0 56 92" fill="none">
-      <ellipse cx="28" cy="29" rx="24" ry="27" fill={color} />
-      <defs>
-        <radialGradient id={gradId} cx="35%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
-          <stop offset="100%" stopColor={dark} stopOpacity="0.45" />
-        </radialGradient>
-      </defs>
-      <ellipse cx="28" cy="29" rx="24" ry="27" fill={`url(#${gradId})`} />
-      <ellipse cx="19" cy="19" rx="6" ry="8" fill="rgba(255,255,255,0.32)" transform="rotate(-20 19 19)" />
-      <polygon points="28,56 24,63 32,63" fill={dark} />
-      <path d="M28 63 Q33 71 24 79 Q19 83 28 92" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
-      <text x="28" y="35" textAnchor="middle" fill="white" fontSize="15" fontWeight="800" fontFamily="serif">26</text>
-    </svg>
-  );
-}
-
-function shadeColor(hex: string, amount: number): string {
-  const num = parseInt(hex.replace("#", ""), 16);
-  const r = Math.min(255, Math.max(0, (num >> 16) + amount));
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
-  const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
-  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
-}
