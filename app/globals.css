@@ -1,40 +1,26 @@
 @import "tailwindcss";
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  /* Remove tap delay on mobile */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-  max-width: 100vw;
-  overflow-x: hidden;
+html {
   height: 100%;
+  /* Fallback for browsers without dvh */
+  height: -webkit-fill-available;
 }
 
 body {
-  background: #f8e8ec;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes petal-fall {
-  0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 0.8; }
-  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-}
-
-.float-animation {
-  animation: float 3s ease-in-out infinite;
-}
-
-.petal {
-  animation: petal-fall linear infinite;
-  position: fixed;
-  pointer-events: none;
-  z-index: 0;
+  height: 100%;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #f8bbd9;
 }

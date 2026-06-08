@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Lato } from "next/font/google";
 import "./globals.css";
 
@@ -16,6 +16,15 @@ const lato = Lato({
 export const metadata: Metadata = {
   title: "O Teu Dia ♥",
   description: "Um presente especial para ti",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#f8bbd9",
 };
 
 export default function RootLayout({
