@@ -20,6 +20,17 @@ const HINTS = [
   "← voltar  ·  ver vídeo ♥",
 ];
 
+const BALLOON_COLORS = ["#e91e8c", "#ffd700", "#ce93d8", "#f48fb1", "#ff6b9d", "#c2185b", "#ffe082", "#e040fb"];
+
+const BALLOONS = Array.from({ length: 11 }, (_, i) => ({
+  id: i,
+  left: `${4 + (i * 8.8) % 90}%`,
+  color: BALLOON_COLORS[i % BALLOON_COLORS.length],
+  delay: i * 0.15,
+  duration: 5.5 + (i % 4) * 0.8,
+  size: 0.85 + (i % 3) * 0.12,
+}));
+
 const HEARTS = Array.from({ length: 14 }, (_, i) => ({
   id: i,
   left: `${4 + (i * 6.8) % 92}%`,
@@ -191,6 +202,45 @@ export default function Home() {
                 display: "block",
               }}
             />
+
+            {/* Balloons burst */}
+            {BALLOONS.map((b) => (
+              <motion.div
+                key={b.id}
+                style={{
+                  position: "absolute",
+                  left: b.left,
+                  bottom: 0,
+                  zIndex: 15,
+                  pointerEvents: "none",
+                  scale: b.size,
+                  transformOrigin: "bottom center",
+                }}
+                initial={{ y: 0, opacity: 0 }}
+                animate={{
+                  y: "-115vh",
+                  rotate: [-4, 4, -5, 3, -3, 4, -4],
+                  opacity: [0, 1, 1, 1, 0],
+                }}
+                transition={{
+                  duration: b.duration,
+                  delay: b.delay,
+                  y: { ease: "easeOut" },
+                  rotate: {
+                    duration: b.duration * 0.55,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: b.delay,
+                  },
+                  opacity: {
+                    times: [0, 0.08, 0.5, 0.78, 1],
+                    ease: "linear",
+                  },
+                }}
+              >
+                <BalloonSVG color={b.color} />
+              </motion.div>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
@@ -370,4 +420,56 @@ export default function Home() {
       </AnimatePresence>
     </main>
   );
+}
+
+/* ── Balloon SVG component ── */
+function BalloonSVG({ color }: { color: string }) {
+  const dark = shadeColor(color, -25);
+  return (
+    <svg width="56" height="92" viewBox="0 0 56 92" fill="none">
+      {/* Body */}
+      <ellipse cx="28" cy="29" rx="24" ry="27" fill={color} />
+      {/* Side shading */}
+      <ellipse cx="28" cy="29" rx="24" ry="27" fill={`url(#grad-${color.replace("#", "")})`} />
+      <defs>
+        <radialGradient id={`grad-${color.replace("#", "")}`} cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+          <stop offset="100%" stopColor={dark} stopOpacity="0.4" />
+        </radialGradient>
+      </defs>
+      {/* Highlight */}
+      <ellipse cx="19" cy="19" rx="6" ry="8" fill="rgba(255,255,255,0.32)" transform="rotate(-20 19 19)" />
+      {/* Knot triangle */}
+      <polygon points="28,56 24,63 32,63" fill={dark} />
+      {/* String */}
+      <path
+        d="M28 63 Q33 71 24 79 Q19 83 28 92"
+        stroke="rgba(255,255,255,0.45)"
+        strokeWidth="1.4"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* "26" label */}
+      <text
+        x="28"
+        y="35"
+        textAnchor="middle"
+        fill="white"
+        fontSize="15"
+        fontWeight="800"
+        fontFamily="serif"
+        style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.35))" }}
+      >
+        26
+      </text>
+    </svg>
+  );
+}
+
+function shadeColor(hex: string, percent: number): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const r = Math.min(255, Math.max(0, (num >> 16) + percent));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + percent));
+  const b = Math.min(255, Math.max(0, (num & 0xff) + percent));
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
