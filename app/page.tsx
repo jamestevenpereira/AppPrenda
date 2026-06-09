@@ -13,15 +13,6 @@ const BG_IMAGES = [
   "/step4-cat-envelope.png",
 ];
 
-const BALLOON_COLORS = ["#e91e8c","#ffd700","#ce93d8","#f48fb1","#ff6b9d","#c2185b","#ffe082","#e040fb"];
-const BALLOONS = Array.from({ length: 10 }, (_, i) => ({
-  id: i,
-  left: 3 + (i * 9.5) % 88,
-  color: BALLOON_COLORS[i % BALLOON_COLORS.length],
-  delay: i * 0.5,
-  duration: 12 + (i % 5) * 2,   // 12-20s — nice slow float
-  scale: 0.8 + (i % 3) * 0.15,
-}));
 
 const HINTS = [
   "Toca para abrir ♥",
@@ -225,30 +216,8 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* ── Balloons ── */}
-      {step === 4 && BALLOONS.map((b) => (
-        <motion.div
-          key={b.id}
-          style={{ position: "absolute", left: `${b.left}%`, bottom: -110, zIndex: 16, pointerEvents: "none" }}
-          initial={{ y: 0, opacity: 0, scale: b.scale }}
-          animate={{
-            y: -1700,
-            opacity: [0, 1, 1, 1, 0],
-            rotate: [-5, 5, -6, 4, -4, 5, -5],
-          }}
-          transition={{
-            delay: b.delay,
-            duration: b.duration,
-            repeat: Infinity,
-            repeatDelay: 2,
-            y: { ease: "linear" },
-            opacity: { times: [0, 0.06, 0.4, 0.8, 1], ease: "linear" },
-            rotate: { duration: b.duration * 0.5, repeat: Infinity, ease: "easeInOut" },
-          }}
-        >
-          <BalloonSVG color={b.color} />
-        </motion.div>
-      ))}
+      {/* ── Birthday balloons — float up and hang at top ── */}
+      {step === 4 && <BirthdayBalloons />}
 
       {/* ── Floating hearts ── */}
       {preloaded && HEARTS.map((h) => (
@@ -357,30 +326,78 @@ export default function Home() {
   );
 }
 
-function BalloonSVG({ color }: { color: string }) {
-  const dark = shadeColor(color, -30);
-  const gid = `g${color.replace("#", "")}`;
+/* ── Two birthday balloons: float up, hang at top, sway ── */
+function BirthdayBalloons() {
   return (
-    <svg width="60" height="98" viewBox="0 0 60 98" fill="none">
+    <div style={{
+      position: "absolute", top: 0, left: 0, right: 0,
+      display: "flex", justifyContent: "center", gap: 28,
+      zIndex: 16, pointerEvents: "none",
+    }}>
+      {/* Balloon "2" — hot pink */}
+      <motion.div
+        initial={{ y: "110vh" }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 38, damping: 18, delay: 0.1 }}
+      >
+        <motion.div
+          animate={{ rotate: [-5, 5, -5] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.8 }}
+          style={{ transformOrigin: "50% 100%" }}
+        >
+          <BigBalloonSVG digit="2" color="#e8437a" />
+        </motion.div>
+      </motion.div>
+
+      {/* Balloon "6" — gold */}
+      <motion.div
+        initial={{ y: "110vh" }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 38, damping: 18, delay: 0.3 }}
+      >
+        <motion.div
+          animate={{ rotate: [5, -5, 5] }}
+          transition={{ duration: 4.3, repeat: Infinity, ease: "easeInOut", delay: 2.1 }}
+          style={{ transformOrigin: "50% 100%" }}
+        >
+          <BigBalloonSVG digit="6" color="#f5c518" />
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+function BigBalloonSVG({ digit, color }: { digit: string; color: string }) {
+  const dark = shadeColor(color, -40);
+  const gid = `big${digit}`;
+  return (
+    <svg width="100" height="260" viewBox="0 0 100 260" fill="none">
       <defs>
-        <radialGradient id={gid} cx="35%" cy="32%" r="65%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.38)" />
-          <stop offset="100%" stopColor={dark} stopOpacity="0.45" />
+        <radialGradient id={gid} cx="34%" cy="30%" r="66%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.42)" />
+          <stop offset="100%" stopColor={dark} stopOpacity="0.5" />
         </radialGradient>
       </defs>
       {/* Body */}
-      <ellipse cx="30" cy="31" rx="26" ry="29" fill={color} />
-      <ellipse cx="30" cy="31" rx="26" ry="29" fill={`url(#${gid})`} />
+      <ellipse cx="50" cy="54" rx="44" ry="50" fill={color} />
+      <ellipse cx="50" cy="54" rx="44" ry="50" fill={`url(#${gid})`} />
       {/* Highlight */}
-      <ellipse cx="20" cy="20" rx="7" ry="9" fill="rgba(255,255,255,0.3)" transform="rotate(-20 20 20)" />
+      <ellipse cx="33" cy="34" rx="13" ry="17" fill="rgba(255,255,255,0.3)" transform="rotate(-22 33 34)" />
       {/* Knot */}
-      <polygon points="30,60 26,67 34,67" fill={dark} />
-      {/* String */}
-      <path d="M30 67 Q36 76 26 84 Q20 90 30 98" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      {/* Text */}
-      <text x="30" y="37" textAnchor="middle" fill="white" fontSize="16" fontWeight="800" fontFamily="Georgia, serif"
-        style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" }}>
-        26
+      <polygon points="50,104 43,115 57,115" fill={dark} />
+      {/* Curvy string */}
+      <path
+        d="M50 115 Q60 138 44 160 Q32 178 50 200 Q62 216 50 238 Q44 250 50 260"
+        stroke="rgba(255,255,255,0.55)" strokeWidth="2.2" fill="none" strokeLinecap="round"
+      />
+      {/* Digit */}
+      <text
+        x="50" y="72"
+        textAnchor="middle" fill="white"
+        fontSize="52" fontWeight="900" fontFamily="Georgia, serif"
+        style={{ filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.55))" }}
+      >
+        {digit}
       </text>
     </svg>
   );
