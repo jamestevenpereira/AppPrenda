@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // 3 = gifts list
 // 4 = cat + envelope photo
 // 5 = video (birthday balloons)
-// 6 = final photo "Com todo o meu amor"
+// 6 = final photo "Com todo o nosso amor"
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const TOTAL_STEPS = 7;
 
@@ -294,14 +294,21 @@ export default function Home() {
                 letterSpacing: "0.04em", lineHeight: 1.3, marginBottom: 14,
                 textShadow: "0 2px 12px rgba(0,0,0,0.6)",
               }}>
-                Com todo o meu amor
+                Com todo o nosso amor ❤️
               </p>
               <motion.p
-                initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.1, type: "spring", stiffness: 160 }}
-                style={{ fontSize: 32, textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
+                initial={{ opacity: 0, translateY: 6 }} animate={{ opacity: 1, translateY: 0 }}
+                transition={{ delay: 0.9, duration: 0.6 }}
+                style={{ fontSize: 20, fontStyle: "italic", letterSpacing: "0.06em", textShadow: "0 2px 8px rgba(0,0,0,0.5)", marginBottom: 4 }}
               >
-                ♥
+                Momo e Bebê
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.2, type: "spring", stiffness: 160 }}
+                style={{ fontSize: 28, textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
+              >
+                ❤️
               </motion.p>
             </motion.div>
           </motion.div>
