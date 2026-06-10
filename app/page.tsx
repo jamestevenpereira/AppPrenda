@@ -38,30 +38,72 @@ const HEARTS = Array.from({ length: 14 }, (_, i) => ({
   char: ["♥", "💕", "🌸", "✿"][i % 4],
 }));
 
-// Synthetic paper-rustle sound via Web Audio API
+// Three-layer paper opening sound via Web Audio API
 function playPaperSound() {
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const duration = 0.35;
-    const buf = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) {
-      const env = Math.pow(1 - i / data.length, 1.8);
-      data[i] = (Math.random() * 2 - 1) * env * 0.6;
+    type AnyAudioContext = typeof AudioContext;
+    const AudioCtx: AnyAudioContext =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: AnyAudioContext }).webkitAudioContext;
+    const ctx = new AudioCtx();
+    const sr = ctx.sampleRate;
+
+    const noise = (dur: number): AudioBuffer => {
+      const buf = ctx.createBuffer(1, sr * dur, sr);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      return buf;
+    };
+
+    const play = (buf: AudioBuffer, ...nodes: AudioNode[]) => {
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const chain: AudioNode[] = [src, ...nodes, ctx.destination];
+      for (let i = 0; i < chain.length - 1; i++) chain[i].connect(chain[i + 1]);
+      src.start();
+    };
+
+    // ── Layer 1: high-frequency rustle with flutter (main papery texture) ──
+    const rustle = ctx.createBuffer(1, sr * 0.55, sr);
+    const rd = rustle.getChannelData(0);
+    for (let i = 0; i < rd.length; i++) {
+      const t = i / sr;
+      const env = (1 - t / 0.55) * (1 - Math.exp(-t * 500)); // sharp attack, slow decay
+      const flutter = 0.65 + 0.35 * Math.abs(Math.sin(Math.PI * 18 * t + Math.sin(7 * Math.PI * t)));
+      rd[i] = (Math.random() * 2 - 1) * env * flutter;
     }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.value = 1400;
-    filter.Q.value = 0.7;
-    const gain = ctx.createGain();
-    gain.gain.value = 0.4;
-    src.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    src.start();
-  } catch { /* ignore in environments without AudioContext */ }
+    const hp1 = ctx.createBiquadFilter(); hp1.type = "highpass";  hp1.frequency.value = 3200;
+    const pk1 = ctx.createBiquadFilter(); pk1.type = "peaking";   pk1.frequency.value = 6500; pk1.gain.value = 9; pk1.Q.value = 1.2;
+    const g1  = ctx.createGain();         g1.gain.value = 0.5;
+    const src1 = ctx.createBufferSource(); src1.buffer = rustle;
+    src1.connect(hp1); hp1.connect(pk1); pk1.connect(g1); g1.connect(ctx.destination); src1.start();
+
+    // ── Layer 2: sharp initial crack / crinkle transient ──
+    const crack = ctx.createBuffer(1, sr * 0.07, sr);
+    const cd = crack.getChannelData(0);
+    for (let i = 0; i < cd.length; i++) {
+      const t = i / sr;
+      const env = Math.exp(-t * 140);
+      // jagged crinkle waveform
+      const crinkle = Math.sign(Math.sin(Math.PI * 900 * t * (1 - t * 9)));
+      cd[i] = ((Math.random() * 2 - 1) * 0.55 + crinkle * 0.15) * env;
+    }
+    const hp2 = ctx.createBiquadFilter(); hp2.type = "highpass"; hp2.frequency.value = 1000;
+    const g2  = ctx.createGain();         g2.gain.value = 0.75;
+    play(crack, hp2, g2);
+
+    // ── Layer 3: mid-low paper movement thump ──
+    const thump = noise(0.28);
+    const td = thump.getChannelData(0);
+    for (let i = 0; i < td.length; i++) {
+      const t = i / sr;
+      td[i] *= Math.pow(1 - t / 0.28, 2.2) * (1 - Math.exp(-t * 300));
+    }
+    const bp3 = ctx.createBiquadFilter(); bp3.type = "bandpass"; bp3.frequency.value = 750; bp3.Q.value = 1.8;
+    const g3  = ctx.createGain();         g3.gain.value = 0.22;
+    play(thump, bp3, g3);
+
+  } catch { /* silently ignore */ }
 }
 
 function haptic(ms = 8) {
