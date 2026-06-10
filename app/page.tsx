@@ -299,7 +299,7 @@ export default function Home() {
               <motion.p
                 initial={{ opacity: 0, translateY: 6 }} animate={{ opacity: 1, translateY: 0 }}
                 transition={{ delay: 0.9, duration: 0.6 }}
-                style={{ fontSize: 20, fontStyle: "italic", letterSpacing: "0.06em", textShadow: "0 2px 8px rgba(0,0,0,0.5)", marginBottom: 4 }}
+                style={{ fontSize: 20, fontStyle: "italic", letterSpacing: "0.06em", color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,0.5)", marginBottom: 4 }}
               >
                 Momo e Bebê
               </motion.p>
